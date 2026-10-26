@@ -62,7 +62,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onVerified }) => {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!firebaseAuth) {
-      setError('Firebase is not configured. Add the Firebase web-app settings to the repository-root .env file and restart the web server.');
+      setError('Sign-in is not configured yet. Add VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, and VITE_FIREBASE_APP_ID in your hosting provider’s frontend environment variables, enable Email/Password in Firebase Authentication, and redeploy the site.');
       return;
     }
 
@@ -224,7 +224,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onVerified }) => {
                     <div className="auth-input-wrap"><LockKeyhole size={17} /><input id="auth-password" type="password" autoComplete={mode === 'register' ? 'new-password' : 'current-password'} placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'} value={password} onChange={(event) => setPassword(event.target.value)} required minLength={6} maxLength={128} /></div>
                   </>
                 )}
-                <button className="auth-submit" type="submit" disabled={busy || !firebaseAuth}>
+                <button className="auth-submit" type="submit" disabled={busy || !email.trim() || (mode !== 'forgot' && !password)}>
                   {busy ? 'Please wait…' : mode === 'forgot' ? <>Send reset link <ArrowRight size={17} /></> : mode === 'register' ? <>Create account <ArrowRight size={17} /></> : <>Sign in <ArrowRight size={17} /></>}
                 </button>
                 {mode === 'login' && <button className="auth-resend" type="button" onClick={() => changeMode('forgot')}>Forgot password?</button>}
