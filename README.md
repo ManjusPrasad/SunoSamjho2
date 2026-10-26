@@ -68,7 +68,7 @@ Copy `.env.example` to `.env`:
 cp .env.example .env
 ```
 
-For account access, configure `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, and `VITE_FIREBASE_APP_ID` from your Firebase web app. In Firebase Console, enable **Email/Password** under Authentication → Sign-in method and add `localhost` under Authentication → Settings → Authorized domains. The app supports registration, email verification, sign-in, and password-reset emails; unverified accounts cannot enter the app. Verification and reset emails may take a few minutes to arrive, so check your spam or junk folder too. Passwords are stored and managed by Firebase Authentication, not by this app. Restart the web server after changing `.env`.
+For account access, configure `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, and `VITE_FIREBASE_APP_ID` from your Firebase web app. In Firebase Console, enable **Email/Password** under Authentication → Sign-in method. Add `localhost` under Authentication → Settings → Authorized domains for local development, and add each deployed frontend hostname there as well (for example, `sunosamjho2.vercel.app`; enter only the hostname, without `https://`). The app supports registration, email verification, sign-in, and password-reset emails; unverified accounts cannot enter the app. Verification and reset emails may take a few minutes to arrive, so check your spam or junk folder too. Passwords are stored and managed by Firebase Authentication, not by this app. Restart the web server after changing `.env`.
 
 To connect to official **Gnani AI** services, supply your credentials in `.env`:
 ```env

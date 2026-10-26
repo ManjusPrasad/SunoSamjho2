@@ -39,7 +39,7 @@ const getAuthErrorMessage = (error: unknown) => {
       return 'Email/password sign-in is not enabled. Enable it in Firebase Console under Authentication → Sign-in method.';
     case 'auth/unauthorized-continue-uri':
     case 'auth/invalid-continue-uri':
-      return 'Firebase is blocking the return address. Add localhost to Authentication → Settings → Authorized domains.';
+      return `Firebase rejected this site's return address (${window.location.hostname}). In Firebase Console, open Authentication → Settings → Authorized domains and add this hostname without https://. For the deployed app, add sunosamjho2.vercel.app, not localhost. Then resend the verification email.`;
     default:
       return 'Authentication could not be completed. Check your Firebase settings and try again.';
   }
