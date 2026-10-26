@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files - SECRETS MUST NEVER BE COMMITTED
+.env
+.env.*
+!.env.example
+*.env
+!*.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+
+# AI Editor local caches and telemetry
+.claude/
+.cursor/
+.kiro/
+
+# Local AI assistant instructions and hooks in .github (keeps GitHub Actions workflows trackable)
+.github/hooks/
+.github/instructions/
+.github/copilot-instructions.md
+# To ignore the entire .github directory instead, uncomment the line below:
+# .github/

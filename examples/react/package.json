@@ -1,0 +1,10 @@
+{
+  "name": "sunosamjho-example-react",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@sunosamjho/sdk": "file:../../packages/sdk",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

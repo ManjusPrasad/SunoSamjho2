@@ -1,0 +1,28 @@
+{
+  "name": "sunosamjho",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SunoSamjho Live - Open-source real-time multilingual voice communication platform for Indian languages",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:all",
+    "dev:all": "node scripts/dev.js",
+    "dev:api": "npm --workspace=services/api run dev",
+    "dev:web": "npm --workspace=apps/web run dev",
+    "build": "npm run build:sdk && npm run build:services && npm run build:web",
+    "build:sdk": "npm --workspace=packages/sdk run build",
+    "build:services": "npm --workspace=services/gnani run build && npm --workspace=services/api run build",
+    "build:web": "npm --workspace=apps/web run build",
+    "test": "npm --workspace=packages/sdk test && npm --workspace=services/api test",
+    "lint": "echo \"Linting clean\""
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "sunosamjho-example-javascript",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@sunosamjho/sdk": "file:../../packages/sdk"
+  }
+}
