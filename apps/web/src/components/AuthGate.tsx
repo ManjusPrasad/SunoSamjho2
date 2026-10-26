@@ -202,13 +202,6 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onVerified }) => {
             <h2>{title}</h2>
             <p className="auth-card-subtitle">{subtitle}</p>
 
-            {!firebaseAuth && (
-              <div className="auth-setup-note" role="status">
-                <ShieldCheck size={17} />
-                <span><strong>Firebase setup required</strong>Add VITE_FIREBASE_API_KEY and VITE_FIREBASE_APP_ID from Firebase Console → Project settings → Your apps → Web app to the repository-root .env. Enable Email/Password in Authentication → Sign-in method and add localhost to Authentication → Settings → Authorized domains. Restart the web server after updating .env.</span>
-              </div>
-            )}
-
             {mode === 'verify' ? (
               <div className="auth-form">
                 <button className="auth-submit" type="button" onClick={checkVerification} disabled={busy || !firebaseAuth}>
