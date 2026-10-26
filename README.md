@@ -90,13 +90,14 @@ npm run dev
 
 ### Deploying the web app and API separately
 
-The web app and API are separate workspaces and can be deployed as separate services from this monorepo; they do not need to be combined into one file. Configure each deployment from the repository root so npm can resolve the workspaces.
+The web app and API are separate workspaces and can be deployed as separate services from this one monorepo; they do not need separate GitHub repositories. Vercel is suitable for the static frontend. The API includes a persistent WebSocket gateway, so deploy it as a long-running Node service (the included Render Blueprint is one option), not as a Vercel serverless function.
 
-- **Web app:** Build with `npm ci && npm run build:web` and publish `apps/web/dist` as a static site. Set `VITE_API_BASE_URL` to the public API origin (for example, `https://api.example.com`) and `VITE_WS_BASE_URL` to its WebSocket origin (`wss://api.example.com`). These `VITE_*` values are embedded at build time, so set them before building.
-- **API:** Build with `npm ci && npm run build:services`; start with `npm --workspace=services/api start`. Set `NODE_ENV=production`, `PORT` as required by the host, and `CORS_ORIGIN` to the exact web app origin (for example, `https://app.example.com`). Configure the required Gnani credentials/provider settings in the backend environment only; never put server secrets in `VITE_*` variables. Production must not use the mock provider.
-- **Firebase:** Add the deployed web app domain to Firebase Authentication → Settings → Authorized domains.
+- **API:** Create a Render Blueprint from `render.yaml` in the repository. Set `CORS_ORIGIN` to the exact Vercel site origin, and provide your Gnani credential as a Render secret (`GNANI_API_KEY_ID` or `GNANI_API_KEY`). The Blueprint keeps mock mode disabled in production. The service health-check path is `/api/v1/health`; the host must support persistent WebSocket connections.
+- **Web app:** Import the same repository into Vercel with the repository root as the project root. `vercel.json` configures `npm ci`, `npm run build:web`, the `apps/web/dist` output, and SPA fallback. Set these Vercel environment variables before deploying: `VITE_API_BASE_URL` to the public Render HTTPS origin (for example, `https://sunosamjho-api.onrender.com`) and `VITE_WS_BASE_URL` to the matching secure WebSocket origin (`wss://sunosamjho-api.onrender.com`).
+- **Firebase:** Add the Vercel site domain to Firebase Authentication → Settings → Authorized domains. Set the Firebase web-app config values as Vercel environment variables (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, and `VITE_FIREBASE_APP_ID`).
+- **Gnani:** Store credentials only in the backend host's secret/environment settings. Never set Gnani credentials as `VITE_*` variables or commit them to GitHub. Prisma handles speech-to-text (STT), and Timbre handles speech synthesis when configured. Evon translation needs an approved inference endpoint and is not enabled merely by setting the API key.
 
-The API host must support persistent WebSocket connections. For local development, the web app defaults to same-origin `/api/v1` requests and WebSockets; setting the two `VITE_*_BASE_URL` values to `http://localhost:4000` and `ws://localhost:4000` connects directly to the local API.
+The `VITE_*` values are embedded into the frontend at build time; redeploy the Vercel app after changing them. For local development, the web app defaults to same-origin `/api/v1` requests and WebSockets; setting the two API URL values to `http://localhost:4000` and `ws://localhost:4000` connects directly to the local API.
 
 ---
 

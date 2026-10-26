@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: sunosamjho-api
+    runtime: node
+    buildCommand: npm ci && npm run build:services
+    startCommand: npm --workspace=services/api start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: ENABLE_MOCK_PROVIDER
+        value: "false"
+      - key: CORS_ORIGIN
+        sync: false
+      - key: GNANI_API_KEY_ID
+        sync: false
+      - key: GNANI_API_KEY
+        sync: false
+      - key: GNANI_API_BASE_URL
+        value: https://api.vachana.ai
+      - key: GNANI_PRISMA_BASE_URL
+        value: https://api.vachana.ai
+      - key: GNANI_TIMBRE_BASE_URL
+        value: https://api.vachana.ai
+      - key: GNANI_EVON_BASE_URL
+        sync: false
+      - key: GNANI_EVON_API_KEY
+        sync: false
