@@ -1,8 +1,8 @@
-# SunoSamjho Live
+# GnaniFlow
 
-> **"Break Language Barriers. Have Real Conversations."**
+> **Voice, clearly understood.**
 
-SunoSamjho Live is an open-source real-time multilingual voice communication platform designed to enable natural, low-latency conversation across Indian languages. Built with **Gnani AI** (Prisma, Evon, and Timbre), it connects speakers across languages through voice-to-voice communication.
+GnaniFlow is a voice workspace for speech-to-text, text-to-speech, and multilingual conversations. The existing room feature supports live voice communication. Provider-backed speech features require valid, server-side Gnani credentials; local mock mode is explicitly labeled and refuses to return fabricated transcripts, translations, explanations, or synthesized audio.
 
 ```
 Person A (Hindi) ──[ Microphone / VAD ]──► Gnani Prisma (STT)
@@ -16,10 +16,11 @@ Person B (Kannada) ◄──[ Timbre (TTS) ]──◄ Gnani Evon (NMT & NLU)
 ## Key Capabilities
 
 - **Two-Way Voice-to-Voice Rooms:** Cryptographically generated room codes (`SJ-XXXXX`) connecting participants in real time.
+- **Standalone Speech Playground:** Use separate Text to Speech and Speech to Text tools without creating a room. Read typed or uploaded `.txt`, `.md`, `.csv`, and `.json` notes aloud or submit audio for transcription. Live microphone dictation streams mono 16 kHz PCM to Prisma through the server-side WebSocket proxy; uploaded clips use Prisma REST. Real provider results require valid Gnani credentials; mock mode does not fabricate transcripts.
 - **Audio Capture & VAD Engine:** Native browser `AudioContext` with Voice Activity Detection, silence segmentation, and feedback loop prevention (gates mic capture during TTS synthesis).
 - **Sequential Playback Queue:** Guarantees translated utterances play in order without acoustic overlap.
 - **Explain Simply Mode:** Powered by Gnani Evon reasoning to rephrase complex phrases into plain, accessible language in the user's native tongue.
-- **Privacy by Design:** Zero raw audio persistence. Utterances are processed purely in ephemeral memory buffers. User-controlled transcripts can be viewed, searched, exported, or permanently deleted.
+- **Privacy Controls:** Microphone capture begins only after the user chooses a speech action and grants permission. Provider handling and retention depend on the account's terms; review those terms before using sensitive audio.
 - **Developer Ecosystem:** REST API and TypeScript SDK (`@sunosamjho/sdk`) with token-bucket rate limiting, SHA-256 hashed API keys, and comprehensive documentation.
 
 ---
@@ -70,6 +71,8 @@ cp .env.example .env
 
 For account access, configure `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, and `VITE_FIREBASE_APP_ID` from your Firebase web app. In Firebase Console, enable **Email/Password** under Authentication → Sign-in method. Add `localhost` under Authentication → Settings → Authorized domains for local development, and add each deployed frontend hostname there as well (for example, `sunosamjho2.vercel.app`; enter only the hostname, without `https://`). The app supports registration, email verification, sign-in, and password-reset emails; unverified accounts cannot enter the app. Verification and reset emails may take a few minutes to arrive, so check your spam or junk folder too. Passwords are stored and managed by Firebase Authentication, not by this app. Restart the web server after changing `.env`.
 
+To check the local app on a phone on the same Wi-Fi, open the Vite Network URL printed by `npm run dev` (for example, `http://192.168.x.x:5173`) instead of `localhost`. Add that phone-accessible hostname/IP to Firebase Authentication → Settings → Authorized domains, and allow Node/Vite through the computer's local firewall if prompted. Browser microphone access generally requires a secure context; plain HTTP on a LAN IP may allow sign-in and text features but block recording. Use a trusted local HTTPS certificate for microphone testing on a phone.
+
 To connect to official **Gnani AI** services, supply your credentials in `.env`:
 ```env
 GNANI_API_KEY=your_gnani_api_key
@@ -78,7 +81,11 @@ GNANI_API_KEY_SECRET=your_secret_key
 GNANI_API_BASE_URL=https://api.gnani.ai
 ```
 
-*Note: For local offline development without Gnani credentials, keep `ENABLE_MOCK_PROVIDER=true`. The UI will visibly display a "MOCK MODE" banner, and this mode is strictly prohibited from running when `NODE_ENV=production`.*
+Use a newly rotated credential in the server-side `.env` only; never place it in `VITE_*` settings, source code, or chat. Set `ENABLE_MOCK_PROVIDER=false` when you want the backend to use configured Gnani credentials. The local environment template leaves the credential fields blank.
+
+*Note: For local offline development without Gnani credentials, keep `ENABLE_MOCK_PROVIDER=true`. The UI will visibly display a "MOCK MODE" banner; real STT/TTS is unavailable in this mode, and the mock provider is prohibited when `NODE_ENV=production`.*
+
+For real Prisma realtime dictation, configure `GNANI_API_KEY_ID` with a rotated credential and set `ENABLE_MOCK_PROVIDER=false`. The server derives `wss://api.vachana.ai/stt/v3/stream` from `GNANI_PRISMA_BASE_URL`; set `GNANI_PRISMA_WS_URL` only when Gnani supplies a different official endpoint. Never expose provider keys in frontend variables. Phone microphone access requires a trusted HTTPS origin.
 
 ### 4. Running the Application
 ```bash
@@ -87,6 +94,8 @@ npm run dev
 - **Web Application:** [http://localhost:5173](http://localhost:5173)
 - **API Server:** [http://localhost:4000](http://localhost:4000)
 - **WebSocket Gateway:** `ws://localhost:4000/api/v1/realtime/:conversationId`
+
+The web interface uses the GnaniFlow design system with Open Sans, responsive layouts, Tailwind tokens, and Zustand theme state. Run `npm test` for SDK/API, font-family, and PCM framing checks. No deployment is part of local development.
 
 ### Deploying the web app and API separately
 

@@ -10,16 +10,18 @@ console.log('========================================================');
 console.log('🚀  SUNOSAMJHO LIVE - REAL-TIME CONVERSATION PLATFORM  🚀');
 console.log('========================================================');
 
-const apiProcess = spawn('npx', ['tsx', 'watch', 'src/server.ts'], {
-  cwd: path.join(rootDir, 'services', 'api'),
+const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+
+const apiProcess = spawn(npmCmd, ['run', 'dev:api'], {
+  cwd: rootDir,
   shell: true,
-  stdio: 'inherit',
+  stdio: ['ignore', 'inherit', 'inherit'],
 });
 
-const webProcess = spawn('npx', ['vite'], {
-  cwd: path.join(rootDir, 'apps', 'web'),
+const webProcess = spawn(npmCmd, ['run', 'dev:web'], {
+  cwd: rootDir,
   shell: true,
-  stdio: 'inherit',
+  stdio: ['ignore', 'inherit', 'inherit'],
 });
 
 const cleanExit = () => {

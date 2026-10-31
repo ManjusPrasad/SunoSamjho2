@@ -41,11 +41,10 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
             >
               <Mic size={16} />
             </div>
-            <span style={{ fontWeight: 800, fontSize: '1.05rem' }}>SunoSamjho Live</span>
+            <span style={{ fontWeight: 800, fontSize: '1.05rem' }}>GnaniFlow</span>
           </div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.6 }}>
-            Open-source real-time multilingual voice communication platform. Break language barriers
-            and converse naturally across Indian languages.
+            A focused workspace for speech, text, and multilingual conversation.
           </p>
         </div>
 
@@ -88,7 +87,7 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Shield size={14} color="var(--accent-emerald)" />
-              <span>Zero Raw Audio Persistence</span>
+              <span>Privacy-first audio controls</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Sparkles size={14} color="var(--brand-primary)" />
@@ -117,8 +116,8 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
           color: 'var(--text-muted)',
         }}
       >
-        <span>© {new Date().getFullYear()} SunoSamjho Live. Built for multilingual real-time conversation.</span>
-        <span>Secure server-side credentials · Low-latency Indic audio</span>
+        <span>© {new Date().getFullYear()} GnaniFlow. Voice, clearly understood.</span>
+        <span>Gnani Prisma · Evon · Timbre</span>
       </div>
     </footer>
   );

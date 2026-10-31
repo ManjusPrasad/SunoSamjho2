@@ -1,8 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
+import express from 'express';
 import { generateRoomCode, generateApiKey, hashApiKey } from '../src/utils/id.js';
 import { db } from '../src/db/store.js';
 import { MockSpeechProvider } from '@sunosamjho/gnani';
+import { createSpeechRouter } from '../src/routes/speech.js';
+import {
+  isPrismaFrame,
+  isSupportedPrismaLanguage,
+  PRISMA_FRAME_BYTES,
+  toPrismaRealtimeUrl,
+} from '../src/websocket/prismaDictation.js';
 
 test('Room code generation produces unguessable codes without ambiguous characters', () => {
   const code1 = generateRoomCode();
@@ -79,4 +87,76 @@ test('Mock provider security guard: Refuses execution when NODE_ENV=production',
   );
 
   process.env.NODE_ENV = prevEnv;
+});
+
+test('Prisma realtime proxy validates frame size and supported language', () => {
+  assert.strictEqual(PRISMA_FRAME_BYTES, 1024);
+  assert.strictEqual(isPrismaFrame(Buffer.alloc(1024)), true);
+  assert.strictEqual(isPrismaFrame(Buffer.alloc(1023)), false);
+  assert.strictEqual(isPrismaFrame(new ArrayBuffer(1024)), true);
+  assert.strictEqual(isSupportedPrismaLanguage('hi-IN'), true);
+  assert.strictEqual(isSupportedPrismaLanguage('fr-FR'), false);
+});
+
+test('Prisma realtime URL always uses secure transport and the documented stream path', () => {
+  assert.strictEqual(
+    toPrismaRealtimeUrl('https://api.vachana.ai/custom/path'),
+    'wss://api.vachana.ai/stt/v3/stream'
+  );
+  assert.throws(() => toPrismaRealtimeUrl('http://localhost:4000'), /secure HTTPS or WSS endpoint/);
+});
+
+test('Mock provider refuses AI routes instead of returning sample speech, translations, or audio', async () => {
+  const app = express();
+  app.use(express.json());
+  app.use(createSpeechRouter(new MockSpeechProvider()));
+  const server = app.listen(0);
+
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== 'string');
+    const baseUrl = `http://127.0.0.1:${address.port}`;
+    const requests = [
+      {
+        path: '/transcribe',
+        body: {
+        audioBase64: Buffer.from('audio').toString('base64'),
+        language: 'hi-IN',
+        },
+        code: 'SPEECH_RECOGNITION_UNAVAILABLE',
+      },
+      {
+        path: '/translate',
+        body: { text: 'Hello', sourceLanguage: 'en-IN', targetLanguage: 'hi-IN' },
+        code: 'TRANSLATION_UNAVAILABLE',
+      },
+      {
+        path: '/speak',
+        body: { text: 'Hello', language: 'en-IN' },
+        code: 'SPEECH_SYNTHESIS_UNAVAILABLE',
+      },
+      {
+        path: '/explain',
+        body: { text: 'Hello', language: 'en-IN' },
+        code: 'EXPLANATION_UNAVAILABLE',
+      },
+    ];
+
+    for (const request of requests) {
+      const response = await fetch(`${baseUrl}${request.path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body),
+      });
+      const data = await response.json() as { error?: { code?: string; message?: string }; transcript?: string; translatedText?: string; audioBase64?: string };
+      assert.strictEqual(response.status, 503, request.path);
+      assert.strictEqual(data.error?.code, request.code, request.path);
+      assert.match(data.error?.message || '', /not configured/i, request.path);
+      assert.strictEqual(data.transcript, undefined, request.path);
+      assert.strictEqual(data.translatedText, undefined, request.path);
+      assert.strictEqual(data.audioBase64, undefined, request.path);
+    }
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
 });

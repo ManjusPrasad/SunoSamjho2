@@ -3,12 +3,12 @@ import { ArrowUp, Bot, Check, ChevronDown, CircleHelp, Mic2, Sparkles, X } from 
 
 type Message = { id: number; role: 'assistant' | 'user'; text: string };
 
-const suggestions = ['What is SunoSamjho?', 'How do I start a room?', 'Which languages are supported?'];
+const suggestions = ['What is GnaniFlow?', 'How do I start a room?', 'Which languages are supported?'];
 
 const answers: Array<{ matches: RegExp; text: string }> = [
   {
-    matches: /what is sunosamjho|what is suno samjho|about sunosamjho|about this project|sunosamjho live/i,
-    text: 'SunoSamjho Live helps people have real-time voice conversations across Indian languages. It captures speech, translates it, and speaks the result to the other participant. You can explore Live Room, History, Developers, and Docs from the navigation.',
+    matches: /what is gnaniflow|about gnaniflow|about this project/i,
+    text: 'GnaniFlow is a workspace for speech-to-text, text-to-speech, and multilingual conversations powered by Gnani AI. Explore Dictation, History, Developers, and Docs from the navigation.',
   },
   {
     matches: /start|create|join|room|conversation|invite/i,
@@ -42,7 +42,7 @@ const answers: Array<{ matches: RegExp; text: string }> = [
 
 function getProjectAnswer(question: string) {
   const match = answers.find(({ matches }) => matches.test(question));
-  return match?.text ?? 'I can help with SunoSamjho rooms, supported languages, privacy, mock vs. live Gnani setup, the API/SDK, and development commands. Try asking about one of those, or share the relevant error with secrets removed.';
+  return match?.text ?? 'I can help with GnaniFlow rooms, supported languages, privacy, mock vs. live Gnani setup, the API/SDK, and development commands. Try asking about one of those, or share the relevant error with secrets removed.';
 }
 
 export const ProjectAssistant: React.FC = () => {
@@ -52,7 +52,7 @@ export const ProjectAssistant: React.FC = () => {
     {
       id: 0,
       role: 'assistant',
-      text: 'Hi! I’m your SunoSamjho project guide. Ask me how the app works, how to get started, or anything about its voice and translation features.',
+      text: 'Hi! I’m your GnaniFlow project guide. Ask how to get started or about voice and language features.',
     },
   ]);
   const scrollAnchor = useRef<HTMLDivElement>(null);
@@ -80,12 +80,12 @@ export const ProjectAssistant: React.FC = () => {
   return (
     <>
       {isOpen && (
-        <section className="project-assistant" role="dialog" aria-label="SunoSamjho project assistant">
+        <section className="project-assistant" role="dialog" aria-label="GnaniFlow project assistant">
           <header className="assistant-header">
             <div className="assistant-avatar"><Bot size={19} /></div>
             <div className="assistant-heading">
               <strong>Project Guide</strong>
-              <span><i /> SunoSamjho · ready to help</span>
+              <span><i /> GnaniFlow · ready to help</span>
             </div>
             <button className="assistant-icon-button" onClick={() => setIsOpen(false)} aria-label="Minimize project guide" title="Minimize">
               <ChevronDown size={19} />
@@ -136,7 +136,7 @@ export const ProjectAssistant: React.FC = () => {
         className={`assistant-launcher ${isOpen ? 'is-open' : ''}`}
         onClick={() => setIsOpen((open) => !open)}
         aria-expanded={isOpen}
-        aria-label={isOpen ? 'Close project guide' : 'Ask the SunoSamjho project guide'}
+        aria-label={isOpen ? 'Close project guide' : 'Ask the GnaniFlow project guide'}
       >
         {isOpen ? <Check size={18} /> : <><Sparkles size={18} /><span>Ask our AI</span></>}
       </button>

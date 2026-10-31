@@ -35,6 +35,8 @@ const getAuthErrorMessage = (error: unknown) => {
       return 'Too many attempts. Wait a little while, then try again.';
     case 'auth/network-request-failed':
       return 'Could not reach Firebase. Check your internet connection and try again.';
+    case 'auth/unauthorized-domain':
+      return `Firebase has not authorized ${window.location.hostname}. Add this hostname or phone LAN IP under Firebase Console → Authentication → Settings → Authorized domains.`;
     case 'auth/operation-not-allowed':
       return 'Email/password sign-in is not enabled. Enable it in Firebase Console under Authentication → Sign-in method.';
     case 'auth/unauthorized-continue-uri':
@@ -62,7 +64,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onVerified }) => {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!firebaseAuth) {
-      setError('Sign-in is not configured yet. Add VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, and VITE_FIREBASE_APP_ID in your hosting provider’s frontend environment variables, enable Email/Password in Firebase Authentication, and redeploy the site.');
+      setError('Sign-in is not configured yet. Set VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, and VITE_FIREBASE_APP_ID in the repository root .env.local file, then restart npm run dev.');
       return;
     }
 
@@ -173,13 +175,13 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onVerified }) => {
       <div className="auth-grid" />
       <div className="auth-noise" />
 
-      <section className="auth-layout" aria-label="SunoSamjho account access">
+      <section className="auth-layout" aria-label="KisanSaathi account access">
         <div className="auth-story">
-          <div className="auth-brand"><span><Mic2 size={19} /></span> SunoSamjho <b>LIVE</b></div>
+          <div className="auth-brand"><span><Mic2 size={19} /></span> KisanSaathi <b>VOICE</b></div>
           <div className="auth-story-copy">
-            <div className="auth-eyebrow"><span className="auth-eyebrow-dot" /> VOICES WITHOUT BORDERS</div>
-            <h1>One world.<br /><span>Many voices.</span><br />Understood.</h1>
-            <p>Every language deserves to be heard. Meet face to face, speak naturally, and let conversation flow across languages.</p>
+            <div className="auth-eyebrow"><span className="auth-eyebrow-dot" /> VOICE ADVISOR FOR INDIAN FARMERS</div>
+            <h1>Your farm.<br /><span>Your language.</span><br />Your advisor.</h1>
+            <p>Ask crop and weather questions by voice in Hindi, Kannada, Telugu and more. KisanSaathi understands you and speaks back in your language.</p>
           </div>
 
           <div className="auth-voice-art" aria-hidden="true">
@@ -192,12 +194,12 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onVerified }) => {
             <span className="auth-language auth-language-right">ನಮಸ್ಕಾರ</span>
           </div>
 
-          <div className="auth-story-foot"><ShieldCheck size={15} /> Your voice. Your conversation. Your control.</div>
+          <div className="auth-story-foot"><ShieldCheck size={15} /> Your crop. Your language. Your advisor.</div>
         </div>
 
         <div className="auth-form-side">
           <div className="auth-card">
-            <div className="auth-mobile-brand"><span><Mic2 size={18} /></span> SunoSamjho <b>LIVE</b></div>
+            <div className="auth-mobile-brand"><span><Mic2 size={18} /></span> KisanSaathi <b>VOICE</b></div>
             <div className="auth-step-mark"><span>{mode === 'verify' ? <Mail size={18} /> : mode === 'forgot' ? <LockKeyhole size={18} /> : <Sparkles size={18} />}</span><i>SECURE ACCESS</i></div>
             <h2>{title}</h2>
             <p className="auth-card-subtitle">{subtitle}</p>
@@ -247,8 +249,8 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onVerified }) => {
               </div>
             )}
 
-            <div className="auth-divider"><span /> BUILT FOR REAL CONVERSATION <span /></div>
-            <div className="auth-feature-row"><span><Radio size={14} /> Live rooms</span><span><Languages size={14} /> 9 languages</span></div>
+            <div className="auth-divider"><span /> BUILT FOR INDIAN FARMERS <span /></div>
+            <div className="auth-feature-row"><span><Languages size={14} /> 9 languages</span><span><Radio size={14} /> Voice AI</span></div>
           </div>
         </div>
       </section>

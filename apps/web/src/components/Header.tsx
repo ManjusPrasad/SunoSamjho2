@@ -20,11 +20,11 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="app-header">
-      <button className="brand-lockup" onClick={() => navigate('landing')} aria-label="SunoSamjho home">
+      <button className="brand-lockup" onClick={() => navigate('landing')} aria-label="KisanSaathi home">
         <span className="brand-mark">
           <Mic size={20} />
         </span>
-        <span className="brand-name">SunoSamjho<span className="brand-live">LIVE</span></span>
+        <span className="brand-name">KisanSaathi<span className="brand-live">VOICE</span></span>
       </button>
 
       <nav className="header-nav" aria-label="Main navigation">
@@ -58,6 +58,13 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <FileText size={14} />
           <span>Docs</span>
+        </button>
+        <button
+          onClick={() => navigate('advisory')}
+          className={`nav-link ${currentPage === 'advisory' ? 'active' : ''}`}
+        >
+          <FileText size={14} />
+          <span>Advisory</span>
         </button>
       </nav>
 

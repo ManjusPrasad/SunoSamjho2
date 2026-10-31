@@ -8,6 +8,16 @@ export interface PrismaConfig {
   apiKeySecret?: string;
 }
 
+export class PrismaApiError extends Error {
+  constructor(
+    readonly statusCode: number,
+    message: string
+  ) {
+    super(message);
+    this.name = 'PrismaApiError';
+  }
+}
+
 export class PrismaClient {
   private breaker = new CircuitBreaker({ timeoutMs: 12000 });
 
@@ -28,7 +38,10 @@ export class PrismaClient {
         const url = `${this.config.baseUrl.replace(/\/$/, '')}/stt/v3`;
         const headers: Record<string, string> = {};
         const apiKeyId = this.config.apiKeyId || this.config.apiKey;
-        if (apiKeyId) headers['X-API-Key-ID'] = apiKeyId;
+        if (apiKeyId) {
+          headers['X-API-Key-ID'] = apiKeyId;
+          headers['X-API-Key'] = apiKeyId;
+        }
 
         const audioBytes = audio instanceof Buffer ? audio : Buffer.from(audio);
         const form = new FormData();
@@ -54,13 +67,25 @@ export class PrismaClient {
         });
 
         if (!response.ok) {
-          const errorText = await response.text().catch(() => 'Unknown error');
-          throw new Error(`Gnani Prisma STT failed [${response.status}]: ${errorText}`);
+          await response.arrayBuffer();
+          const message = response.status === 401 || response.status === 403
+            ? 'Gnani Prisma rejected the server credentials. Check the rotated API key and account access.'
+            : response.status === 429
+              ? 'Gnani Prisma is rate-limiting requests. Wait briefly, then retry.'
+              : response.status === 503
+                ? 'Gnani Prisma is temporarily unavailable. Try again shortly.'
+                : 'Gnani Prisma could not transcribe this audio. Check the audio format and try again.';
+          throw new PrismaApiError(response.status, message);
         }
 
-        const data: any = await response.json();
+        const data: {
+          transcript?: string;
+          text?: string;
+          results?: Array<{ transcript?: string }>;
+          confidence?: number;
+        } = await response.json();
         const text = data.transcript || data.text || (data.results && data.results[0]?.transcript) || '';
-        const confidence = data.confidence || 0.95;
+        const confidence = typeof data.confidence === 'number' ? data.confidence : undefined;
 
         return {
           text: text.trim(),

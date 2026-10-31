@@ -7,18 +7,26 @@ import { LiveRoomPage } from './pages/LiveRoomPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { DeveloperPage } from './pages/DeveloperPage';
 import { DocsPage } from './pages/DocsPage';
+import { AdvisoryPage } from './pages/AdvisoryPage';
 import { ProjectAssistant } from './components/ProjectAssistant';
 import { AuthGate } from './components/AuthGate';
 import { firebaseAuth } from './services/firebase';
 import { fetchHealth } from './services/api';
+import { useThemeStore } from './stores/themeStore';
 
 export function App() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const theme = useThemeStore((state) => state.theme);
+  const setTheme = useThemeStore((state) => state.setTheme);
   const [currentPage, setCurrentPage] = useState<string>('landing');
   const [pageParams, setPageParams] = useState<Record<string, string>>({});
   const [isMockMode, setIsMockMode] = useState<boolean>(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem('gnaniflow-access') === 'true';
+  });
+  // If already authenticated via localStorage, skip loading spinner entirely
+  const [authLoading, setAuthLoading] = useState(() => {
+    return localStorage.getItem('gnaniflow-access') !== 'true';
+  });
 
   useEffect(() => {
     // Check initial theme from localStorage
@@ -27,7 +35,7 @@ export function App() {
       setTheme(savedTheme);
       document.documentElement.setAttribute('data-theme', savedTheme);
     } else {
-      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute('data-theme', 'light');
     }
 
     // Check health & provider status
@@ -53,10 +61,20 @@ export function App() {
       setAuthLoading(false);
       return;
     }
-    return onAuthStateChanged(firebaseAuth, (user) => {
-      setIsAuthenticated(Boolean(user?.emailVerified));
+    // Safety timeout — never hang on loading screen more than 4s
+    const timeout = setTimeout(() => setAuthLoading(false), 4000);
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
+      clearTimeout(timeout);
+      if (user?.emailVerified) {
+        setIsAuthenticated(true);
+        localStorage.setItem('gnaniflow-access', 'true');
+      } else if (localStorage.getItem('gnaniflow-access') === 'true') {
+        // User was previously authenticated (e.g. just came through AuthGate)
+        setIsAuthenticated(true);
+      }
       setAuthLoading(false);
     });
+    return () => { clearTimeout(timeout); unsubscribe(); };
   }, []);
 
   const toggleTheme = () => {
@@ -73,29 +91,40 @@ export function App() {
     if (page === 'live' && params.code) nextUrl.searchParams.set('code', params.code);
     else nextUrl.searchParams.delete('code');
     window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
   };
 
   if (authLoading) {
-    return <div className="auth-loading" role="status">Preparing your secure SunoSamjho session…</div>;
+    return <div className="auth-loading" role="status">Preparing your KisanSaathi session…</div>;
   }
 
   if (!isAuthenticated) {
-    return <AuthGate onVerified={() => setIsAuthenticated(true)} />;
+    return (
+      <AuthGate
+        onVerified={() => {
+          localStorage.setItem('gnaniflow-access', 'true');
+          setIsAuthenticated(true);
+        }}
+      />
+    );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="app-shell">
       <Header
         theme={theme}
         toggleTheme={toggleTheme}
         currentPage={currentPage}
         navigate={navigate}
         isMockMode={isMockMode}
-        onSignOut={() => { if (firebaseAuth) void signOut(firebaseAuth); }}
+        onSignOut={() => {
+          localStorage.removeItem('gnaniflow-access');
+          setIsAuthenticated(false);
+          if (firebaseAuth) void signOut(firebaseAuth);
+        }}
       />
 
-      <main style={{ flex: 1 }}>
+      <main className="app-main">
         {currentPage === 'landing' && <LandingPage navigate={navigate} />}
         {currentPage === 'live' && (
           <LiveRoomPage initialRoomCode={pageParams.code} navigate={navigate} />
@@ -103,6 +132,7 @@ export function App() {
         {currentPage === 'history' && <HistoryPage navigate={navigate} />}
         {currentPage === 'developers' && <DeveloperPage navigate={navigate} />}
         {currentPage === 'docs' && <DocsPage />}
+        {currentPage === 'advisory' && <AdvisoryPage navigate={navigate} />}
       </main>
 
       <Footer navigate={navigate} />

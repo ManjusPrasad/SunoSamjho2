@@ -31,7 +31,10 @@ export class TimbreClient {
         };
 
         const apiKeyId = this.config.apiKeyId || this.config.apiKey;
-        if (apiKeyId) headers['X-API-Key-ID'] = apiKeyId;
+        if (apiKeyId) {
+          headers['X-API-Key-ID'] = apiKeyId;
+          headers['X-API-Key'] = apiKeyId;
+        }
 
         const languageVoices: Record<string, string> = {
           'hi-IN': 'Nalini', 'en-IN': 'Kaveri', 'ta-IN': 'Asmita', 'te-IN': 'Suhana',

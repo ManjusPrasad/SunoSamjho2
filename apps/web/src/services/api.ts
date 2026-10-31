@@ -1,10 +1,25 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/+$/, '') || '';
+const configuredApiBase = import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/+$/, '') || '';
+const API_BASE_URL = /^(https?:\/\/)(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(configuredApiBase)
+  ? ''
+  : configuredApiBase;
 const API_BASE = `${API_BASE_URL}/api/v1`;
 
-export function getRealtimeWebSocketUrl(roomIdOrCode: string) {
+function getWebSocketBaseUrl() {
   const configuredBase = import.meta.env.VITE_WS_BASE_URL?.trim().replace(/\/+$/, '');
-  const base = configuredBase || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
+  const isLoopbackBase = /^wss?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(configuredBase || '');
+  return configuredBase && !isLoopbackBase
+    ? configuredBase
+    : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
+}
+
+export function getRealtimeWebSocketUrl(roomIdOrCode: string) {
+  const base = getWebSocketBaseUrl();
   return `${base}/api/v1/realtime/${encodeURIComponent(roomIdOrCode)}`;
+}
+
+export function getPrismaDictationWebSocketUrl(language: string) {
+  const base = getWebSocketBaseUrl();
+  return `${base}/api/v1/dictation/realtime?language=${encodeURIComponent(language)}`;
 }
 
 export async function fetchHealth() {
@@ -29,11 +44,36 @@ export async function translateText(text: string, sourceLanguage: string, target
   return data;
 }
 
-export async function speakText(text: string, language: string) {
+export async function transcribeAudio(audioBase64: string, language: string) {
+  const res = await fetch(`${API_BASE}/transcribe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ audioBase64, language, audioFormat: 'wav', sampleRate: 16000 }),
+  });
+  let data: { transcript?: unknown; confidence?: unknown; error?: { message?: string } };
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(`Prisma transcription returned an invalid API response (HTTP ${res.status}).`);
+  }
+  if (!res.ok) throw new Error(data.error?.message || `Prisma transcription failed (HTTP ${res.status}).`);
+  if (typeof data.transcript !== 'string') {
+    throw new Error('Prisma transcription returned no transcript. Please retry with a supported audio file.');
+  }
+  return data;
+}
+
+export async function speakText(text: string, language: string, options?: { voiceId?: string; speed?: number }) {
   const res = await fetch(`${API_BASE}/speak`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, language, audioFormat: 'wav' }),
+    body: JSON.stringify({
+      text,
+      language,
+      voiceId: options?.voiceId,
+      speed: options?.speed,
+      audioFormat: 'wav',
+    }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error?.message || 'Speech synthesis failed');

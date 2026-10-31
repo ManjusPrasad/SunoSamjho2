@@ -5,6 +5,7 @@ import { MockSpeechProvider } from './mock.js';
 export * from './types.js';
 export * from './languages.js';
 export * from './provider.js';
+export * from './prisma.js';
 export * from './mock.js';
 export * from './circuitBreaker.js';
 

@@ -1,45 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { encodeMonoWav } from '../services/audio';
 
 export interface AudioPipelineOptions {
   onAudioSegmentReady?: (audioBase64: string) => void;
   vadThreshold?: number; // RMS threshold
   silenceThresholdMs?: number; // Ms of silence before cutting segment
 }
-
-const encodeMonoWav = (audioBuffer: AudioBuffer, targetSampleRate = 16000): Blob => {
-  const input = audioBuffer.getChannelData(0);
-  const outputLength = Math.max(1, Math.floor(input.length * targetSampleRate / audioBuffer.sampleRate));
-  const buffer = new ArrayBuffer(44 + outputLength * 2);
-  const view = new DataView(buffer);
-  const writeText = (offset: number, value: string) => {
-    for (let index = 0; index < value.length; index += 1) view.setUint8(offset + index, value.charCodeAt(index));
-  };
-
-  writeText(0, 'RIFF');
-  view.setUint32(4, 36 + outputLength * 2, true);
-  writeText(8, 'WAVE');
-  writeText(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, targetSampleRate, true);
-  view.setUint32(28, targetSampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeText(36, 'data');
-  view.setUint32(40, outputLength * 2, true);
-
-  for (let index = 0; index < outputLength; index += 1) {
-    const position = index * audioBuffer.sampleRate / targetSampleRate;
-    const before = Math.floor(position);
-    const after = Math.min(before + 1, input.length - 1);
-    const fraction = position - before;
-    const sample = Math.max(-1, Math.min(1, input[before] * (1 - fraction) + input[after] * fraction));
-    view.setInt16(44 + index * 2, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
-  }
-
-  return new Blob([buffer], { type: 'audio/wav' });
-};
 
 export function useAudioPipeline(options: AudioPipelineOptions = {}) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -67,6 +33,12 @@ export function useAudioPipeline(options: AudioPipelineOptions = {}) {
   // Request Microphone Permissions and initialize audio graph
   const initializeMic = useCallback(async () => {
     try {
+      if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+        throw new Error('Phone browsers require a trusted HTTPS page for microphone access. Sign-in and text features can still work over local Wi-Fi.');
+      }
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Microphone access is unavailable in this browser. Use a supported browser and allow microphone permission.');
+      }
       setPermissionError(null);
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {

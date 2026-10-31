@@ -16,11 +16,12 @@ import {
   Link2,
   RefreshCw,
   Download,
+  Radio,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAudioPipeline } from '../hooks/useAudioPipeline';
 import { WaveformVisualizer } from '../components/WaveformVisualizer';
-import { fetchLanguages, getConversation, endConversation, getRealtimeWebSocketUrl } from '../services/api';
+import { fetchLanguages, getConversation, endConversation, getRealtimeWebSocketUrl, createConversation } from '../services/api';
 
 interface LiveRoomPageProps {
   initialRoomCode?: string;
@@ -45,7 +46,9 @@ export const LiveRoomPage: React.FC<LiveRoomPageProps> = ({
   initialRoomCode,
   navigate,
 }) => {
-  const [roomCode, setRoomCode] = useState(initialRoomCode || 'SJ-DEMO1');
+  const [roomCode, setRoomCode] = useState(initialRoomCode || '');
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [roomCreationError, setRoomCreationError] = useState('');
   const [roomId, setRoomId] = useState<string | null>(null);
   const [connectionState, setConnectionState] = useState<'CONNECTING' | 'CONNECTED' | 'RECONNECTING' | 'ERROR'>('CONNECTING');
   const [speechState, setSpeechState] = useState<'LISTENING' | 'PROCESSING' | 'TRANSLATING' | 'SPEAKING' | 'ERROR'>('LISTENING');
@@ -96,6 +99,27 @@ export const LiveRoomPage: React.FC<LiveRoomPageProps> = ({
     }
   }, []);
 
+  const handleCreateRoom = async () => {
+    setIsCreatingRoom(true);
+    setRoomCreationError('');
+    try {
+      const result = await createConversation({
+        sourceLanguage: myLanguage,
+        targetLanguage: partnerLanguage,
+        saveTranscripts: true,
+      });
+      setRoomId(result.room.id);
+      setRoomCode(result.room.roomCode);
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set('code', result.room.roomCode);
+      window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+    } catch (cause) {
+      setRoomCreationError(cause instanceof Error ? cause.message : 'Could not create the room. Check that the local API is running and try again.');
+    } finally {
+      setIsCreatingRoom(false);
+    }
+  };
+
   const {
     hasPermission,
     permissionError,
@@ -137,6 +161,7 @@ export const LiveRoomPage: React.FC<LiveRoomPageProps> = ({
 
   // Connect to Realtime WebSocket
   useEffect(() => {
+    if (!roomCode) return;
     intentionalCloseRef.current = false;
     retryAttemptRef.current = 0;
     setRetryAttempt(0);
@@ -268,7 +293,7 @@ export const LiveRoomPage: React.FC<LiveRoomPageProps> = ({
       intentionalCloseRef.current = true;
       wsRef.current?.close();
     };
-  }, [myLanguage, retryNonce, queueAudioForPlayback, playAudioDirectly]);
+  }, [myLanguage, retryNonce, queueAudioForPlayback, playAudioDirectly, roomCode]);
 
   // Auto-scroll message list
   useEffect(() => {
@@ -345,6 +370,43 @@ export const LiveRoomPage: React.FC<LiveRoomPageProps> = ({
     const textToCopy = `[${msg.sourceLanguage}] ${msg.originalText}\n[${msg.targetLanguage}] ${msg.translatedText}`;
     navigator.clipboard.writeText(textToCopy);
   };
+
+  if (!roomCode) {
+    return (
+      <main className="room-start-shell">
+        <section className="room-start-card">
+          <div className="room-start-icon"><Mic size={24} /></div>
+          <p className="room-start-kicker">LIVE VOICE TRANSLATION</p>
+          <h1>Start a conversation when you’re ready.</h1>
+          <p className="room-start-copy">Choose languages, create a room, then share its code. Your microphone and live session won’t start until you create or join a room.</p>
+          <div className="room-start-languages">
+            <label>
+              <span>Your language</span>
+              <select value={myLanguage} onChange={(event) => setMyLanguage(event.target.value)}>
+                {supportedLangs.map((language) => <option key={language.code} value={language.code}>{language.name} · {language.nativeName}</option>)}
+                {!supportedLangs.length && <><option value="hi-IN">Hindi</option><option value="kn-IN">Kannada</option></>}
+              </select>
+            </label>
+            <label>
+              <span>Partner language</span>
+              <select value={partnerLanguage} onChange={(event) => setPartnerLanguage(event.target.value)}>
+                {supportedLangs.map((language) => <option key={language.code} value={language.code}>{language.name} · {language.nativeName}</option>)}
+                {!supportedLangs.length && <><option value="kn-IN">Kannada</option><option value="hi-IN">Hindi</option></>}
+              </select>
+            </label>
+          </div>
+          {roomCreationError && <p className="phrase-error" role="alert">{roomCreationError}</p>}
+          <div className="room-start-actions">
+            <button type="button" className="btn btn-secondary" onClick={() => navigate('landing')}>Back</button>
+            <button type="button" className="btn btn-primary" onClick={() => void handleCreateRoom()} disabled={isCreatingRoom}>
+              {isCreatingRoom ? <RefreshCw className="spin-icon" size={16} /> : <Radio size={16} />}
+              {isCreatingRoom ? 'Creating room…' : 'Create live room'}
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 16px 80px' }}>

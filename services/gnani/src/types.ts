@@ -23,7 +23,7 @@ export interface TranscribeOptions {
 export interface TranscribeResult {
   text: string;
   language: string;
-  confidence: number;
+  confidence?: number;
   durationMs?: number;
   isFinal: boolean;
 }
